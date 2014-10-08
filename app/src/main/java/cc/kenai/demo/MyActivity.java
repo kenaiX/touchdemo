@@ -1,14 +1,15 @@
 package cc.kenai.demo;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 
-public class MyActivity extends Activity {
+public class MyActivity extends PreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        addPreferencesFromResource(R.xml.main);
         startService(new Intent(this, MainService.class));
     }
 

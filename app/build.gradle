@@ -37,5 +37,4 @@ dependencies {
     compile 'com.daimajia.easing:library:1.0.0@aar'
     compile 'com.daimajia.androidanimations:library:1.1.2@aar'
     compile 'de.greenrobot:eventbus:2.2.1'
-    compile 'com.jakewharton:butterknife:5.1.2'
 }
