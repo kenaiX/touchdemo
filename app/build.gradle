@@ -4,15 +4,12 @@ buildscript {
     }
 
     dependencies {
-        classpath 'me.tatarka:gradle-retrolambda:2.4.0'
+        classpath 'com.jakewharton.hugo:hugo-plugin:+'
     }
-}
-repositories {
-    mavenCentral()
 }
 
 apply plugin: 'com.android.application'
-apply plugin: 'retrolambda'
+apply plugin: 'hugo'
 
 android {
     compileSdkVersion 19
@@ -26,8 +23,8 @@ android {
         versionName "1.0"
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
 }
 
@@ -37,4 +34,5 @@ dependencies {
     compile 'com.daimajia.easing:library:1.0.0@aar'
     compile 'com.daimajia.androidanimations:library:1.1.2@aar'
     compile 'de.greenrobot:eventbus:2.2.1'
+    compile 'com.jakewharton.timber:timber:2.4.+'
 }

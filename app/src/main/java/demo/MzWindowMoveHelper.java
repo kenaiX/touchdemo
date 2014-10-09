@@ -6,6 +6,8 @@ import android.view.WindowManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import timber.log.Timber;
+
 public class MzWindowMoveHelper {
 
     public static void move(Context context, int offsetX, int offsetY) {
@@ -13,6 +15,7 @@ public class MzWindowMoveHelper {
         try {
             Method method = wm.getClass().getMethod("moveTopAppShow", new Class[]{Integer.TYPE, Integer.TYPE});
             method.invoke(wm, offsetX, offsetY);
+            Timber.i("moveTopAppShow x: %s y: %s",offsetX,offsetY);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
