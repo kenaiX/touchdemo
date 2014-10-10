@@ -1,9 +1,9 @@
-
 package demo;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
@@ -13,16 +13,16 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
-import cc.kenai.demo.R;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.IntEvaluator;
 import com.nineoldandroids.animation.ValueAnimator;
+
+import cc.kenai.demo.R;
 import hugo.weaving.DebugLog;
 
 public class MzTouch {
@@ -42,7 +42,7 @@ public class MzTouch {
         }
     };
     final MainViewHelper mainViewHelper = new MainViewHelper();
-    final TargetViewHelper targetViewHelper = new TargetViewHelper();
+
 
     MainTouchListener touchListener;
     ViewGroup mTopViewGroup;
@@ -104,23 +104,21 @@ public class MzTouch {
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
         layoutParams.format = PixelFormat.RGBA_8888;
-        DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        layoutParams.width = dm.widthPixels;
-        layoutParams.height = dm.heightPixels;
+        layoutParams.width = 150;
+        layoutParams.height = 150;
         layoutParams.x = 0;
         layoutParams.y = 0;
-        layoutParams.gravity = Gravity.TOP | Gravity.START;
-        layoutParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        layoutParams.gravity = Gravity.CENTER;
+        layoutParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         wm.addView(mTopViewGroup, layoutParams);
 
-        YoYo.with(Techniques.ZoomInUp)
-                .duration(700)
+        YoYo.with(Techniques.Tada)
+                .duration(500)
                 .withListener(new Animator.AnimatorListener() {
                     @Override
                     public void onAnimationStart(Animator animation) {
-                        touchListener.canTouch = false;
+                        touchListener.canTouch = true;
                     }
 
                     @Override
@@ -152,7 +150,7 @@ public class MzTouch {
     }
 
     class MainTouchListener implements View.OnTouchListener {
-        public boolean canTouch = false;
+        public boolean canTouch = true;
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -184,6 +182,8 @@ public class MzTouch {
         }
 
         class MyOnGestureListener implements GestureDetector.OnGestureListener {
+            final TargetViewHelper targetViewHelper = new TargetViewHelper();
+
             boolean state = false;
             float moveX,
                     moveY, totalY;
@@ -193,14 +193,13 @@ public class MzTouch {
                 mMoveShow.setVisibility(View.VISIBLE);
                 mStableShow.setImageResource(R.drawable.round_2);
                 moveX = moveY = 0;
+                targetViewHelper.init();
             }
 
             public void end() {
                 state = false;
-                mStableShow.setImageResource(R.drawable.round_1);
-                mStableShow.animate().scaleX(1f);
-                mStableShow.animate().scaleY(1f);
                 mainViewHelper.changeState(State.DISMISS);
+                mStableShow.setImageResource(R.drawable.round_1);
                 targetViewHelper.normalDelay(handler, 2000);
             }
 
@@ -223,14 +222,7 @@ public class MzTouch {
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
                 if (state) {
-                    totalY -= distanceY;
-                    if (totalY > 0) {
-                        int x = (int) mMoveShow.getX() - (int) distanceX;
-                        int y = (int) mMoveShow.getY() - (int) distanceY;
-                        mMoveShow.layout(x, y, x + mMoveShow.getWidth(), y + mMoveShow.getHeight());
-                        changeMainShowScale(-distanceX, -distanceY);
-                    }
-
+                    changeMainShowScale(-distanceX, -distanceY);
                 } else {
                     first();
                 }
@@ -250,12 +242,20 @@ public class MzTouch {
             final void changeMainShowScale(float x, float y) {
                 moveX += x;
                 moveY += y;
-                float f = 1 - ((moveX) * (moveX) + (moveY) * (moveY)) / 500000f;
-                if (f > 0.3f) {
-                    mStableShow.setScaleY(f);
+
+                float f = targetViewHelper.moveDeal((int) moveX, (int) moveY);
+
+                if (f > 0) {
                     mStableShow.setScaleX(f);
-                    targetViewHelper.move((int) x, (int) y);
+                    mStableShow.setScaleY(f);
                 }
+
+                if (!haveMoved) {
+                    mTouchView.setBackgroundColor(Color.argb(80, 230, 180, 50));
+                    haveMoved = true;
+                    mTouchView.setText("wait");
+                }
+
             }
         }
 
@@ -292,23 +292,66 @@ public class MzTouch {
         }
     }
 
-    final class TargetViewHelper {
-        int totalMoveX, totalMoveY;
 
-        public final void move(int x, int y) {
-            totalMoveX += x;
-            totalMoveY += y;
-            if (x != 0 || y != 0) {
-                MzWindowMoveHelper.move(context, x, y);
-                if (!haveMoved) {
-                    mTouchView.setBackgroundColor(Color.argb(50, 50, 180, 230));
-                    haveMoved = true;
-                    mTouchView.setText("back");
-                }
+    //所有关于窗口移动的逻辑都在此处处理
+    final class TargetViewHelper {
+        MzWindowMoveHelper moveHelper = new MzWindowMoveHelper();
+
+
+        public final void init() {
+            moveHelper.init(context);
+        }
+
+        //返回一个放大缩小的参数
+        public final float moveDeal(int x, int y) {
+            if (y < 0) {
+                y = 0;
+            }
+
+            int jx, jy;
+
+            moveHelper.move(testX(x), testY(y));
+
+            float f = 1 - (x * x + y * y) / 500000f;
+            if (f < 0.3f) {
+                return -1f;
+            }
+            return f;
+        }
+        public final void moveNoDeal(int x, int y) {
+            moveHelper.move(x, y);
+        }
+
+
+        private final void update() {
+            moveHelper.update();
+        }
+
+        private final void reset() {
+            moveHelper.reset();
+        }
+
+
+        @DebugLog
+        final int testX(int i) {
+            if (i <= 300) {
+                return i;
+            } else{
+                return (i-300)/3+300;
+            }
+        }
+
+        @DebugLog
+        final int testY(int i) {
+            if (i <= 500) {
+                return i;
+            } else  {
+                return (i-500)/3+500;
             }
         }
 
         public void normalDelay(Handler handler, long d) {
+            update();
             handler.removeCallbacks(run);
             handler.postDelayed(run, d);
         }
@@ -325,23 +368,22 @@ public class MzTouch {
             }
         };
 
-        public final void moveToNormal() {
+        private final void moveToNormal() {
+            final Point point = moveHelper.getPoint();
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f);
-            valueAnimator.setDuration(1000);
+
+            float f = (point.x * point.x + point.y * point.y) / 500000f;
+
+            valueAnimator.setDuration((long) (f * 500 + 200));
             valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 IntEvaluator intEvaluator = new IntEvaluator();
 
-                int thisX = totalMoveX,
-                        thisY = totalMoveY;
-
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    float f = (float) animation.getAnimatedValue();
-                    int jX = intEvaluator.evaluate(f, totalMoveX, 0);
-                    int jY = intEvaluator.evaluate(f, totalMoveY, 0);
-                    move(jX - thisX, jY - thisY);
-                    thisX = jX;
-                    thisY = jY;
+                    float f = (Float) animation.getAnimatedValue();
+                    int jX = intEvaluator.evaluate(f, point.x, 0);
+                    int jY = intEvaluator.evaluate(f, point.y, 0);
+                    moveNoDeal(jX,jY);
                 }
             });
             valueAnimator.addListener(new Animator.AnimatorListener() {
@@ -365,17 +407,16 @@ public class MzTouch {
 
                 }
             });
-            valueAnimator.setInterpolator(new AccelerateInterpolator());
+//            valueAnimator.setInterpolator(new AccelerateInterpolator());
             valueAnimator.start();
 
         }
 
         final void moveNormal() {
-            MzWindowMoveHelper.move(context, 0, 0);
-            mTouchView.setBackgroundColor(Color.TRANSPARENT);
+            reset();
+            mTouchView.setBackgroundColor(Color.argb(80, 50, 180, 230));
             haveMoved = false;
             mTouchView.setText("touch");
-            totalMoveX = totalMoveY = 0;
         }
     }
 
@@ -400,6 +441,7 @@ public class MzTouch {
             super(context);
 
             setGravity(Gravity.CENTER);
+            setBackgroundColor(Color.argb(80, 50, 180, 230));
             setText("touch");
 
             setOnTouchListener(new View.OnTouchListener() {
@@ -467,9 +509,6 @@ public class MzTouch {
             public boolean onDown(MotionEvent e) {
                 startY = e.getY();
                 state = false;
-                if (haveMoved) {
-                    targetViewHelper.normal(handler);
-                }
                 return true;
             }
 
@@ -495,6 +534,7 @@ public class MzTouch {
             super(context);
 
             setGravity(Gravity.CENTER);
+            setBackgroundColor(Color.argb(80, 50, 180, 230));
             setText("touch");
 
             setOnTouchListener(new View.OnTouchListener() {
@@ -516,8 +556,8 @@ public class MzTouch {
             DisplayMetrics dm = context.getResources().getDisplayMetrics();
             layoutParams.width = dm.widthPixels / 5;
             layoutParams.height = 100;
-            layoutParams.x = 0;
-            layoutParams.y = 0;
+            layoutParams.x = dm.widthPixels;
+            layoutParams.y = dm.heightPixels / 2;
             layoutParams.gravity = Gravity.START | Gravity.TOP;
             layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
@@ -536,7 +576,6 @@ public class MzTouch {
                 state = false;
                 if (haveMoved) {
                     afterHaveMoved = true;
-                    targetViewHelper.normal(handler);
                 }
                 return true;
             }
@@ -564,4 +603,6 @@ public class MzTouch {
         }
 
     }
+
+
 }
