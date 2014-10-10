@@ -32,10 +32,10 @@ public class MzTouch {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
-                    showMainView();
+                    touchListener.showMainView();
                     break;
                 case 0:
-                    dismissMainView();
+                    touchListener.dismissMainView();
                     break;
 
             }
@@ -70,6 +70,8 @@ public class MzTouch {
             }
         });
 
+        touchListener = new MainTouchListener();
+
     }
 
     public final void initForBottom() {
@@ -87,69 +89,72 @@ public class MzTouch {
         mTouchView.dismissTouchView();
     }
 
-    final void showMainView() {
-        if (isShow) {
-            return;
-        }
-        isShow = true;
 
-        mMoveShow.setVisibility(View.INVISIBLE);
-        mStableShow.setImageResource(R.drawable.round_1);
-        mStableShow.setScaleX(1f);
-        mStableShow.setScaleY(1f);
-
-        touchListener = new MainTouchListener();
-        mMainButton.setOnTouchListener(touchListener);
-
-        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-        layoutParams.format = PixelFormat.RGBA_8888;
-        layoutParams.width = 150;
-        layoutParams.height = 150;
-        layoutParams.x = 0;
-        layoutParams.y = 0;
-        layoutParams.gravity = Gravity.CENTER;
-        layoutParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        wm.addView(mTopViewGroup, layoutParams);
-
-        YoYo.with(Techniques.Tada)
-                .duration(500)
-                .withListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        touchListener.canTouch = true;
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        touchListener.canTouch = true;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                }).playOn(mStableShow);
-
-    }
-
-    final void dismissMainView() {
-        if (!isShow) {
-            return;
-        }
-        isShow = false;
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        wm.removeView(mTopViewGroup);
-
-    }
 
     class MainTouchListener implements View.OnTouchListener {
+        public final void showMainView() {
+            if (isShow) {
+                return;
+            }
+            isShow = true;
+
+            mMoveShow.setVisibility(View.INVISIBLE);
+            mStableShow.setImageResource(R.drawable.round_1);
+            mStableShow.setScaleX(1f);
+            mStableShow.setScaleY(1f);
+
+            mMainButton.setOnTouchListener(touchListener);
+
+            WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+            layoutParams.format = PixelFormat.RGBA_8888;
+            layoutParams.width = 150;
+            layoutParams.height = 150;
+            layoutParams.x = 0;
+            layoutParams.y = 0;
+            layoutParams.gravity = Gravity.CENTER;
+            layoutParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            wm.addView(mTopViewGroup, layoutParams);
+
+            YoYo.with(Techniques.Tada)
+                    .duration(500)
+                    .withListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            touchListener.canTouch = true;
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            touchListener.canTouch = true;
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    }).playOn(mStableShow);
+            detector.prepare();
+        }
+
+        public final void dismissMainView() {
+            if (!isShow) {
+                return;
+            }
+            isShow = false;
+            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            wm.removeView(mTopViewGroup);
+            detector.mayReset();
+        }
+
+
+        final MyGestureDetector detector = new MyGestureDetector(context, new MyOnGestureListener()) ;
         public boolean canTouch = true;
 
         @Override
@@ -176,6 +181,17 @@ public class MzTouch {
 
             }
 
+            void prepare(){
+                listener.prepare();
+            }
+
+            void mayReset(){
+                if(!haveMoved){
+                    listener.mayReset();
+                }
+            }
+
+
             public void end() {
                 listener.end();
             }
@@ -187,6 +203,16 @@ public class MzTouch {
             boolean state = false;
             float moveX,
                     moveY, totalY;
+
+            void prepare(){
+                targetViewHelper.prepare();
+            }
+
+            void mayReset(){
+                if(!haveMoved){
+                    targetViewHelper.reset();
+                }
+            }
 
             void first() {
                 state = true;
@@ -259,9 +285,7 @@ public class MzTouch {
             }
         }
 
-        final MyGestureDetector detector = new MyGestureDetector(context, new MyOnGestureListener()) {
 
-        };
 
     }
 
@@ -297,9 +321,12 @@ public class MzTouch {
     final class TargetViewHelper {
         MzWindowMoveHelper moveHelper = new MzWindowMoveHelper();
 
+        public final void prepare() {
+            moveHelper.prepare(context);
+        }
 
         public final void init() {
-            moveHelper.init(context);
+            moveHelper.init();
         }
 
         //返回一个放大缩小的参数
@@ -318,6 +345,7 @@ public class MzTouch {
             }
             return f;
         }
+
         public final void moveNoDeal(int x, int y) {
             moveHelper.move(x, y);
         }
@@ -336,8 +364,8 @@ public class MzTouch {
         final int testX(int i) {
             if (i <= 300) {
                 return i;
-            } else{
-                return (i-300)/3+300;
+            } else {
+                return (i - 300) / 3 + 300;
             }
         }
 
@@ -345,8 +373,8 @@ public class MzTouch {
         final int testY(int i) {
             if (i <= 500) {
                 return i;
-            } else  {
-                return (i-500)/3+500;
+            } else {
+                return (i - 500) / 3 + 500;
             }
         }
 
@@ -383,7 +411,7 @@ public class MzTouch {
                     float f = (Float) animation.getAnimatedValue();
                     int jX = intEvaluator.evaluate(f, point.x, 0);
                     int jY = intEvaluator.evaluate(f, point.y, 0);
-                    moveNoDeal(jX,jY);
+                    moveNoDeal(jX, jY);
                 }
             });
             valueAnimator.addListener(new Animator.AnimatorListener() {
