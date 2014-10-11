@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/round_1" />
+        android:src="@drawable/ic_launcher" />
 
     <ImageView
         android:id="@+id/moveshow"

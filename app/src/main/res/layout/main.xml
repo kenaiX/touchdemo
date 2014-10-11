@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="#32B4E6">
+
+        <TextView
+            android:id="@+id/name"
+            android:textSize="23sp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="name" />
+
+        <TextView
+            android:id="@+id/summary"
+            android:textSize="23sp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="summary" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+
+        <at.markushi.ui.CircleButton
+            android:id="@+id/model1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/mode1"
+            app:cb_color="#99CC00"
+            app:cb_pressedRingWidth="16dip" />
+
+        <at.markushi.ui.CircleButton
+            android:id="@+id/model2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/model2"
+            app:cb_color="#99CC00"
+            app:cb_pressedRingWidth="16dip" />
+
+        <at.markushi.ui.CircleButton
+            android:id="@+id/model3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/model3"
+            app:cb_color="#99CC00"
+            app:cb_pressedRingWidth="16dip" />
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

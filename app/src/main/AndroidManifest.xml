@@ -3,6 +3,8 @@
     package="cc.kenai.demo">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.DEVICE_POWER"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name="cc.kenai.demo.MainApplication"
@@ -11,7 +13,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.DeviceDefault.Light">
         <activity
-            android:name="cc.kenai.demo.MyActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

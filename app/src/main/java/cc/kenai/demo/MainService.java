@@ -5,7 +5,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+
+import demo.FlipStable;
 import demo.MzTouch;
+import demo.TouchStable;
 import hugo.weaving.DebugLog;
 
 public class MainService extends Service implements
@@ -21,7 +24,7 @@ public class MainService extends Service implements
     @Override
     public void onCreate() {
         super.onCreate();
-        preferences = getSharedPreferences(getPackageName() + "_preferences", 0);
+        preferences = getSharedPreferences("demo", 0);
         preferences.registerOnSharedPreferenceChangeListener(this);
         changeDemo();
     }
@@ -36,7 +39,6 @@ public class MainService extends Service implements
         }
     }
 
-    final static int DEMO_BOTTOM = 1, DEMO_FREE = 2;
 
     @DebugLog
     String changeDemo() {
@@ -44,15 +46,19 @@ public class MainService extends Service implements
             tools.destroy();
             tools = null;
         }
-        switch (Integer.valueOf(preferences.getString("demo", "" + DEMO_BOTTOM))) {
-            case DEMO_BOTTOM:
+        switch (Integer.valueOf(preferences.getString("demo", "" + 0))) {
+            case 0:
+                tools=new TouchStable(this);
+                ((TouchStable)tools).initForStable();
+                return "stable";
+            case 1:
             default:
                 tools = new MzTouch(this);
-                tools.initForBottom();
-                return "bottom";
-            case DEMO_FREE:
-                tools = new MzTouch(this);
                 tools.initForFree();
+                return "bottom";
+            case 2:
+                tools=new FlipStable(this);
+                ((FlipStable)tools).initForStable();
                 return "free";
         }
     }

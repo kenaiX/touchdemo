@@ -12,6 +12,7 @@ public class MzWindowMoveHelper {
     public static final int SHOWWP = 0, INIT = 1, MOVESHOW = 2, MOVEWIN = 3, RESET = 4;
 
     private WindowManager wm;
+    boolean isInited=false;
 
     @DebugLog
     public void prepare(Context context) {
@@ -26,6 +27,7 @@ public class MzWindowMoveHelper {
 
     @DebugLog
     public void init() {
+        isInited=true;
         try {
             Method method = WindowManager.class.getMethod("moveTopAppWinow", new Class[]{Integer.TYPE, Integer.TYPE, Integer.TYPE});
             method.invoke(wm, INIT, 0, 0);
@@ -56,6 +58,7 @@ public class MzWindowMoveHelper {
 
     @DebugLog
     public void reset() {
+        isInited=false;
         try {
             Method method = WindowManager.class.getMethod("moveTopAppWinow", new Class[]{Integer.TYPE, Integer.TYPE, Integer.TYPE});
             method.invoke(wm, RESET, 0, 0);
@@ -78,6 +81,11 @@ public class MzWindowMoveHelper {
             point = new Point(0, 0);
         }
         return point;
+    }
+
+    @DebugLog
+    public boolean getInited() {
+        return  isInited;
     }
 
 }

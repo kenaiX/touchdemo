@@ -35,4 +35,7 @@ dependencies {
     compile 'com.daimajia.androidanimations:library:1.1.2@aar'
     compile 'de.greenrobot:eventbus:2.2.1'
     compile 'com.jakewharton.timber:timber:2.4.+'
+    compile 'com.facebook.rebound:rebound:0.3.6'
+    compile 'com.github.markushi:circlebutton:1.1'
+    compile project(':font')
 }

@@ -2,10 +2,12 @@
 <resources>
 
     <string-array name="demo">
-        <item>底部固定</item>
-        <item>随意游走</item>
+        <item>直接拖动</item>
+        <item>单击呼出</item>
+        <item>手势操作</item>
     </string-array>
     <string-array name="demo_value">
+        <item>0</item>
         <item>1</item>
         <item>2</item>
     </string-array>

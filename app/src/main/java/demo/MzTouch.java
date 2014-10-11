@@ -18,9 +18,11 @@ import android.widget.TextView;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.facebook.rebound.SimpleSpringListener;
+import com.facebook.rebound.Spring;
+import com.facebook.rebound.SpringSystem;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.IntEvaluator;
-import com.nineoldandroids.animation.ValueAnimator;
 
 import cc.kenai.demo.R;
 import hugo.weaving.DebugLog;
@@ -32,10 +34,10 @@ public class MzTouch {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
-                    touchListener.showMainView();
+                    mainTouchListener.showMainView();
                     break;
                 case 0:
-                    touchListener.dismissMainView();
+                    mainTouchListener.dismissMainView();
                     break;
 
             }
@@ -44,13 +46,14 @@ public class MzTouch {
     final MainViewHelper mainViewHelper = new MainViewHelper();
 
 
-    MainTouchListener touchListener;
+    protected MainTouchListener mainTouchListener;
     ViewGroup mTopViewGroup;
 
     ImageView mMainButton;
     ImageView mStableShow, mMoveShow;
 
     MyTouchView mTouchView;
+
     boolean isShow = false;
     boolean haveMoved = false;
 
@@ -63,14 +66,8 @@ public class MzTouch {
         mMoveShow = (ImageView) mTopViewGroup.findViewById(R.id.moveshow);
         mStableShow = (ImageView) mTopViewGroup.findViewById(R.id.stableshow);
 
-        mTopViewGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mainViewHelper.changeState(State.DISMISS);
-            }
-        });
-
-        touchListener = new MainTouchListener();
+        mainTouchListener = new MainTouchListener();
+        mTopViewGroup.setOnTouchListener(mainTouchListener);
 
     }
 
@@ -84,32 +81,31 @@ public class MzTouch {
         mTouchView.addTouchView();
     }
 
-    public final void destroy() {
-
-        mTouchView.dismissTouchView();
+    public void destroy() {
+        if (mTouchView != null) {
+            mTouchView.dismissTouchView();
+        }
     }
 
 
-
     class MainTouchListener implements View.OnTouchListener {
-        public final void showMainView() {
+        public void showMainView() {
             if (isShow) {
                 return;
             }
             isShow = true;
 
             mMoveShow.setVisibility(View.INVISIBLE);
-            mStableShow.setImageResource(R.drawable.round_1);
+            mStableShow.setImageResource(R.drawable.ic_launcher);
             mStableShow.setScaleX(1f);
             mStableShow.setScaleY(1f);
 
-            mMainButton.setOnTouchListener(touchListener);
-
+            DisplayMetrics dm = context.getResources().getDisplayMetrics();
             WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
             layoutParams.format = PixelFormat.RGBA_8888;
-            layoutParams.width = 150;
-            layoutParams.height = 150;
+            layoutParams.width = dm.widthPixels;
+            layoutParams.height = dm.heightPixels;
             layoutParams.x = 0;
             layoutParams.y = 0;
             layoutParams.gravity = Gravity.CENTER;
@@ -122,12 +118,12 @@ public class MzTouch {
                     .withListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animation) {
-                            touchListener.canTouch = true;
+                            mainTouchListener.canTouch = true;
                         }
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            touchListener.canTouch = true;
+                            mainTouchListener.canTouch = true;
                         }
 
                         @Override
@@ -140,10 +136,11 @@ public class MzTouch {
 
                         }
                     }).playOn(mStableShow);
+            detector.setIsLongpressEnabled(false);
             detector.prepare();
         }
 
-        public final void dismissMainView() {
+        public void dismissMainView() {
             if (!isShow) {
                 return;
             }
@@ -154,7 +151,7 @@ public class MzTouch {
         }
 
 
-        final MyGestureDetector detector = new MyGestureDetector(context, new MyOnGestureListener()) ;
+        final MyGestureDetector detector = new MyGestureDetector(context, new MyOnGestureListener());
         public boolean canTouch = true;
 
         @Override
@@ -181,12 +178,12 @@ public class MzTouch {
 
             }
 
-            void prepare(){
+            void prepare() {
                 listener.prepare();
             }
 
-            void mayReset(){
-                if(!haveMoved){
+            void mayReset() {
+                if (!haveMoved) {
                     listener.mayReset();
                 }
             }
@@ -204,12 +201,12 @@ public class MzTouch {
             float moveX,
                     moveY, totalY;
 
-            void prepare(){
+            void prepare() {
                 targetViewHelper.prepare();
             }
 
-            void mayReset(){
-                if(!haveMoved){
+            void mayReset() {
+                if (!haveMoved) {
                     targetViewHelper.reset();
                 }
             }
@@ -225,7 +222,7 @@ public class MzTouch {
             public void end() {
                 state = false;
                 mainViewHelper.changeState(State.DISMISS);
-                mStableShow.setImageResource(R.drawable.round_1);
+                mStableShow.setImageResource(R.drawable.ic_launcher);
                 targetViewHelper.normalDelay(handler, 2000);
             }
 
@@ -286,7 +283,6 @@ public class MzTouch {
         }
 
 
-
     }
 
     public static enum State {
@@ -321,6 +317,10 @@ public class MzTouch {
     final class TargetViewHelper {
         MzWindowMoveHelper moveHelper = new MzWindowMoveHelper();
 
+        public final boolean getInited() {
+            return moveHelper.getInited();
+        }
+
         public final void prepare() {
             moveHelper.prepare(context);
         }
@@ -351,11 +351,11 @@ public class MzTouch {
         }
 
 
-        private final void update() {
+        protected final void update() {
             moveHelper.update();
         }
 
-        private final void reset() {
+        protected final void reset() {
             moveHelper.reset();
         }
 
@@ -378,6 +378,83 @@ public class MzTouch {
             }
         }
 
+        public final void moveTo(final int x, final int y) {
+            // Create a system to run the physics loop for a set of springs.
+            SpringSystem springSystem = SpringSystem.create();
+
+            // Add a spring to the system.
+            Spring spring = springSystem.createSpring();
+
+            // Add a listener to observe the motion of the spring.
+            spring.addListener(new SimpleSpringListener() {
+                IntEvaluator intEvaluator = new IntEvaluator();
+
+                @Override
+                public void onSpringUpdate(Spring spring) {
+                    // You can observe the updates in the spring
+                    // state by asking its current value in onSpringUpdate.
+                    float f = (float) spring.getCurrentValue();
+
+                    int jX = intEvaluator.evaluate(f, 0, x);
+                    int jY = intEvaluator.evaluate(f, 0, y);
+                    moveNoDeal(jX, jY);
+                }
+
+                @Override
+                public void onSpringAtRest(Spring spring) {
+                    super.onSpringAtRest(spring);
+                    update();
+                }
+            });
+
+            // Set the spring in motion; moving from 0 to 1
+            spring.setEndValue(1);
+
+
+//            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f);
+//
+//            float f = (x * x + y * y) / 500000f;
+//
+//            valueAnimator.setDuration((long) (f * 300 + 100));
+//            valueAnimator.setInterpolator(new BounceInterpolator());
+//            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                IntEvaluator intEvaluator = new IntEvaluator();
+//
+//                @Override
+//                public void onAnimationUpdate(ValueAnimator animation) {
+//                    float f = (Float) animation.getAnimatedValue();
+//                    int jX = intEvaluator.evaluate(f, 0, x);
+//                    int jY = intEvaluator.evaluate(f, 0, y);
+//                    moveNoDeal(jX, jY);
+//                }
+//            });
+//            valueAnimator.addListener(new Animator.AnimatorListener() {
+//                @Override
+//                public void onAnimationStart(Animator animation) {
+//
+//                }
+//
+//                @Override
+//                public void onAnimationEnd(Animator animation) {
+//
+//                }
+//
+//                @Override
+//                public void onAnimationCancel(Animator animation) {
+//
+//                }
+//
+//                @Override
+//                public void onAnimationRepeat(Animator animation) {
+//
+//                }
+//            });
+////            valueAnimator.setInterpolator(new AccelerateInterpolator());
+//            valueAnimator.start();
+
+        }
+
+
         public void normalDelay(Handler handler, long d) {
             update();
             handler.removeCallbacks(run);
@@ -398,53 +475,93 @@ public class MzTouch {
 
         private final void moveToNormal() {
             final Point point = moveHelper.getPoint();
-            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f);
 
-            float f = (point.x * point.x + point.y * point.y) / 500000f;
 
-            valueAnimator.setDuration((long) (f * 500 + 200));
-            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            SpringSystem springSystem = SpringSystem.create();
+
+            // Add a spring to the system.
+            Spring spring = springSystem.createSpring();
+
+            // Add a listener to observe the motion of the spring.
+            spring.addListener(new SimpleSpringListener() {
                 IntEvaluator intEvaluator = new IntEvaluator();
 
                 @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    float f = (Float) animation.getAnimatedValue();
+                public void onSpringUpdate(Spring spring) {
+                    // You can observe the updates in the spring
+                    // state by asking its current value in onSpringUpdate.
+                    float f = (float) spring.getCurrentValue();
+
                     int jX = intEvaluator.evaluate(f, point.x, 0);
                     int jY = intEvaluator.evaluate(f, point.y, 0);
                     moveNoDeal(jX, jY);
                 }
-            });
-            valueAnimator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
 
                 @Override
-                public void onAnimationEnd(Animator animation) {
+                public void onSpringAtRest(Spring spring) {
+                    super.onSpringAtRest(spring);
                     moveNormal();
                 }
 
                 @Override
-                public void onAnimationCancel(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
+                public void onSpringEndStateChange(Spring spring) {
+                    super.onSpringEndStateChange(spring);
                 }
             });
-//            valueAnimator.setInterpolator(new AccelerateInterpolator());
-            valueAnimator.start();
+
+            // Set the spring in motion; moving from 0 to 1
+            spring.setEndValue(1);
+
+
+//            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f);
+//
+//            float f = (point.x * point.x + point.y * point.y) / 500000f;
+//
+//            valueAnimator.setDuration((long) (f * 500 + 200));
+//            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                IntEvaluator intEvaluator = new IntEvaluator();
+//
+//                @Override
+//                public void onAnimationUpdate(ValueAnimator animation) {
+//                    float f = (Float) animation.getAnimatedValue();
+//                    int jX = intEvaluator.evaluate(f, point.x, 0);
+//                    int jY = intEvaluator.evaluate(f, point.y, 0);
+//                    moveNoDeal(jX, jY);
+//                }
+//            });
+//            valueAnimator.addListener(new Animator.AnimatorListener() {
+//                @Override
+//                public void onAnimationStart(Animator animation) {
+//
+//                }
+//
+//                @Override
+//                public void onAnimationEnd(Animator animation) {
+//                    moveNormal();
+//                }
+//
+//                @Override
+//                public void onAnimationCancel(Animator animation) {
+//
+//                }
+//
+//                @Override
+//                public void onAnimationRepeat(Animator animation) {
+//
+//                }
+//            });
+////            valueAnimator.setInterpolator(new AccelerateInterpolator());
+//            valueAnimator.start();
 
         }
 
         final void moveNormal() {
             reset();
-            mTouchView.setBackgroundColor(Color.argb(80, 50, 180, 230));
+            if (mTouchView != null) {
+                mTouchView.setBackgroundColor(Color.argb(80, 50, 180, 230));
+                mTouchView.setText("touch");
+            }
             haveMoved = false;
-            mTouchView.setText("touch");
         }
     }
 
@@ -493,7 +610,7 @@ public class MzTouch {
             }
 
             if (specialModel) {
-                touchListener.onTouch(mMainButton, event);
+                mainTouchListener.onTouch(mMainButton, event);
             }
 
             if (mMainButton.isShown()) {
@@ -506,7 +623,7 @@ public class MzTouch {
                     int j2 = (int) (event.getRawY() - local[1]);
                     if (j1 > 0 && j1 < width && j2 > 0 && j2 < height) {
                         specialModel = true;
-                        touchListener.onTouch(mMainButton, event);
+                        mainTouchListener.onTouch(mMainButton, event);
                     }
                 }
             }
