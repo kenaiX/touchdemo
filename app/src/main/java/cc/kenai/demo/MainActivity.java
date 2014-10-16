@@ -9,8 +9,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import net.frakbot.jumpingbeans.JumpingBeans;
-
 import hugo.weaving.DebugLog;
 
 public class MainActivity extends Activity implements
@@ -81,7 +79,6 @@ public class MainActivity extends Activity implements
     protected void onDestroy() {
         super.onDestroy();
         preferences.unregisterOnSharedPreferenceChangeListener(this);
-        build.stopJumping();
         if(!ifback)
         stopService(new Intent(this, MainService.class));
     }
@@ -93,7 +90,6 @@ public class MainActivity extends Activity implements
             changeDemo();
         }
     }
-    JumpingBeans build;
 
     @DebugLog
     String changeDemo() {
@@ -111,17 +107,14 @@ public class MainActivity extends Activity implements
             case 0:
             default:
                 name.setText("模式一：直接拖动");
-                build = new JumpingBeans.Builder().makeTextJump(name, 0, 3).build();
                 summary.setText("直接拖动圆圈即可位移屏幕\n\n长按圆圈后可移动圆圈位置");
                 return "stable";
             case 1:
                 name.setText("模式二：单击呼出");
-                build=new JumpingBeans.Builder().makeTextJump(name, 0, 3).build();
                 summary.setText("点击后从屏幕任意位置可以位移屏幕");
                 return "bottom";
             case 2:
                 name.setText("模式三：手势操作");
-                build=new JumpingBeans.Builder().makeTextJump(name, 0, 3).build();
                 summary.setText("通过对圆圈做甩动手势位移屏幕\n\n长按圆圈后可移动圆圈位置");
                 return "free";
         }
