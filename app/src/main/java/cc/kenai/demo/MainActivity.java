@@ -37,11 +37,6 @@ public class MainActivity extends Activity implements
         winParams.flags |= bits;
         win.setAttributes(winParams);
 
-//        ViewGroup rootView = (ViewGroup) ((ViewGroup) this.findViewById(
-//                android.R.id.content)).getChildAt(0);
-//        rootView.setFitsSystemWindows(true);
-//        rootView.setClipToPadding(true);
-
 
         startService(new Intent(this, MainService.class));
 
@@ -93,15 +88,6 @@ public class MainActivity extends Activity implements
 
     @DebugLog
     String changeDemo() {
-//        // Append jumping dots
-//        new JumpingBeans.Builder()
-//                .appendJumpingDots(name)
-//                .build();
-//
-//        // Make the first word's letters jump
-//        new JumpingBeans.Builder()
-//                .makeTextJump(summary, 0, 3)
-//                .build();
 
         switch (Integer.valueOf(preferences.getString("demo", "" + 0))) {
             case 0:
