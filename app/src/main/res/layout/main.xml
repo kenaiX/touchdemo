@@ -39,7 +39,8 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="40dp">
 
 
         <at.markushi.ui.CircleButton
@@ -51,23 +52,6 @@
             app:cb_color="#99CC00"
             app:cb_pressedRingWidth="16dip" />
 
-        <at.markushi.ui.CircleButton
-            android:id="@+id/model2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/model2"
-            app:cb_color="#99CC00"
-            app:cb_pressedRingWidth="16dip" />
-
-        <at.markushi.ui.CircleButton
-            android:id="@+id/model3"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/model3"
-            app:cb_color="#99CC00"
-            app:cb_pressedRingWidth="16dip" />
 
 
     </LinearLayout>

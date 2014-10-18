@@ -13,7 +13,7 @@ apply plugin: 'hugo'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "20.0.0"
+    buildToolsVersion "21.0.0"
 
     defaultConfig {
         applicationId "cc.kenai.demo"

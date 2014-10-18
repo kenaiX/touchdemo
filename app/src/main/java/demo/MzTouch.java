@@ -25,6 +25,7 @@ import com.nineoldandroids.animation.IntEvaluator;
 
 import cc.kenai.demo.R;
 import hugo.weaving.DebugLog;
+import timber.log.Timber;
 
 public class MzTouch {
     final Context context;
@@ -128,7 +129,6 @@ public class MzTouch {
 
                         }
                     }).playOn(mStableShow);
-            detector.prepare();
             detector.setIsLongpressEnabled(true);
         }
 
@@ -151,9 +151,6 @@ public class MzTouch {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             if (canTouch) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    detector.onUp();
-                }
                 if (event.getAction() != MotionEvent.ACTION_DOWN) {
                     if (detector.listener.moveState) {
                         moveDetector.onTouchEvent(event);
@@ -161,6 +158,9 @@ public class MzTouch {
                     }
                 }
                 detector.onTouchEvent(event);
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    detector.onUp();
+                }
                 return true;
             } else {
                 return false;
@@ -174,10 +174,6 @@ public class MzTouch {
                 super(context, listener);
                 this.listener = listener;
 
-            }
-
-            void prepare() {
-                listener.prepare();
             }
 
 
@@ -234,59 +230,58 @@ public class MzTouch {
         }
 
         //所有关于窗口操作的逻辑都在这里处理
+        //主要用来维护状态，包括位移和操作的状态切换、恢复，真正的位移处理放在包装中
+        //总体思想是按次进行处理，每次按下的时候重置一次包装类的大部分参数
         class MyOnGestureListener extends GestureDetector.SimpleOnGestureListener {
 
             final TargetViewHelper targetViewHelper = new TargetViewHelper();
 
-            public boolean moveState = false;
-
-            float moveX,
-                    moveY;
-
-            void prepare() {
-                targetViewHelper.prepare();
-            }
+            //标识当前是否是--位移模式
+            private boolean moveState = false;
 
 
-            void first() {
-                mMoveShow.setVisibility(View.VISIBLE);
-                mStableShow.setImageResource(R.drawable.round_2);
-                moveX = moveY = 0;
-                if (!targetViewHelper.getInited()) {
-                    targetViewHelper.prepare();
-                    targetViewHelper.init();
-                }
-            }
-
-            public boolean onUp() {
-                moveState = false;
-                if (targetViewHelper.getState()) {
-                    targetViewHelper.update();
-                    mStableShow.setImageResource(R.drawable.ic_launcher);
-                }
-                return true;
-            }
-
-            @Override
+            //一定会执行，并且会在onSingleTapUp 之后执行
+            //所以初始化应该放在此处执行
             public boolean onDown(MotionEvent e) {
-                first();
+                //包括一系列的初始化
+                mStableShow.setImageResource(R.drawable.round_2);
+                if (!targetViewHelper.getPrepared()) {
+                    targetViewHelper.prepare();
+                }
+                targetViewHelper.initViewHelper();
                 moveState = false;
                 return true;
             }
 
             @Override
             public boolean onSingleTapUp(MotionEvent e) {
-                MzBack.back();
+//              todo  MzBack.back();
+                targetViewHelper.normal(handler);
                 return false;
+            }
+
+            //一定会执行，并且会在onSingleTapUp 之后执行
+            //所以reset应该放在此处执行
+            public boolean onUp() {
+                if (targetViewHelper.getInited()) {
+                    targetViewHelper.update();
+                } else {
+                }
+
+                //仅仅会在用户用了不正确的拖动的时候触发
+                Point point = targetViewHelper.getPoint();
+                if (point.x == 0 && point.y == 0) {
+                    targetViewHelper.reset();
+                }
+                mStableShow.setImageResource(R.drawable.ic_launcher);
+                return true;
             }
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                targetViewHelper.onMove((int) -distanceX, (int) -distanceY);
+                if (!targetViewHelper.getInited()) targetViewHelper.init();
+                targetViewHelper.onMove(-distanceX, -distanceY);
 
-                float scale = targetViewHelper.getScale();
-                mStableShow.setScaleX(scale);
-                mStableShow.setScaleY(scale);
                 return true;
             }
 
@@ -334,47 +329,181 @@ public class MzTouch {
         }
     }
 
+    enum MOVESTATE {
+        NONE, X, LEFT, RIGHT, Y
+    }
+
     //所有关于窗口移动的操作都在此处处理
     final class TargetViewHelper {
-        boolean state = false;
 
-        int totalX, totalY;
+        //用来记录从down之后传递进来的所有值
+        float totalX, totalY;
+        //用来记录实际的位移值
+        int moveX, moveY;
+        //用来记录移动状态，分为横移
+        MOVESTATE movestate;
 
-        public boolean getState() {
-            return state;
-        }
 
         MzWindowMoveHelper moveHelper = new MzWindowMoveHelper();
+
+        public final void initViewHelper() {
+            Point point = moveHelper.getPoint();
+            moveX = point.x;
+            moveY = point.y;
+            totalX = totalY = 0;
+            if (moveX == 0 && moveY == 0) {
+                movestate = MOVESTATE.NONE;
+            }
+        }
+
+        public final boolean getPrepared() {
+            return moveHelper.getPrepared();
+        }
 
         public final boolean getInited() {
             return moveHelper.getInited();
         }
 
+        public final Point getPoint() {
+            return moveHelper.getPoint();
+        }
+
         public final void prepare() {
-            state = true;
             moveHelper.prepare(context);
         }
 
         public final void init() {
             moveHelper.init();
-            totalX = totalY = 0;
         }
 
 
-        public final void onMove(int x, int y) {
-            if (y < 0) {
-                y = 0;
-            }
-            moveHelper.move(testX(x), testY(y));
+        /**
+         * 传递进真实的值，内部再进行处理
+         */
+        public final void onMove(float x, float y) {
+            //todo 先不考虑返回的问题
 
-            if (!haveMoved) {
-                haveMoved = true;
+            totalX += x*1.5;
+            totalY += y*1.5;
+
+            dealWithMove(totalX, totalY);
+
+            float scale = getScale(moveX + totalX, moveY + totalY);
+            mStableShow.setScaleX(scale);
+            mStableShow.setScaleY(scale);
+        }
+
+
+        public void dealWithMove(float x, float y) {
+            Point point = new Point();
+            switch (movestate) {
+                //此时来初始化路径
+                case NONE:
+                    //todo 需要抽取成dp
+                    if (Math.abs(x) > 50 || y > 50) {
+                        double p = (180 * Math.atan2(x, y) / Math.PI);
+                        Timber.d("当前角度：" + p);
+                        int mp = (int) Math.abs(p);
+                        if (mp < 30) {
+                            movestate = MOVESTATE.Y;
+                        } else if (mp < 75) {
+                            if (x < 0) {
+                                movestate = MOVESTATE.LEFT;
+                            } else {
+                                movestate = MOVESTATE.RIGHT;
+                            }
+                        } else if (mp < 135) {
+                            movestate = MOVESTATE.X;
+                        } else {
+                            //说明用户用了不正确的触发条件
+                            break;
+                        }
+                        totalX = totalY = 0;
+                    }
+                    break;
+                case X:
+                    point.x = (int) (moveX + x);
+                    point.y = moveY;
+                    moveX(point);
+                    break;
+                case LEFT:
+                    point.x = (int) (moveX + x);
+                    point.y = (int) (moveY + y);
+                    moveLeft(point);
+                    break;
+                case RIGHT:
+                    point.x = (int) (moveX + x);
+                    point.y = (int) (moveY + y);
+                    moveRight(point);
+                    break;
+                case Y:
+                    point.x = moveX;
+                    point.y = (int) (moveY + y);
+                    moveY(point);
+                    break;
+            }
+        }
+
+        void moveX(Point myPoint) {
+            if(myPoint.x>400||myPoint.x<-400){
+                return;
+            }
+            moveHelper.move(myPoint.x, myPoint.y);
+        }
+        void moveY(Point myPoint) {
+            if(myPoint.y>800){
+                return;
+            }
+            if(myPoint.y<0){
+                myPoint.y=0;
+            }
+            moveHelper.move(myPoint.x, myPoint.y);
+        }
+
+        Point tpPoint = new Point(200, 600);
+        void moveRight(Point myPoint) {
+            double aa = Math.atan((double) myPoint.x / (double) myPoint.y);
+
+            double ba = Math.atan((double) tpPoint.x / (double) tpPoint.y);
+
+            double l = Math.cos(aa - ba) * Math.sqrt(myPoint.x * myPoint.x + myPoint.y * myPoint.y);
+
+            if(l>800){
+                return;
+            }
+
+            int toY=(int) (Math.cos(ba) * l);
+            if(toY<0){
+                moveHelper.move(0,0);
+            }else {
+
+                moveHelper.move((int) (Math.sin(ba) * l), toY);
+            }
+        }
+
+        void moveLeft(Point myPoint) {
+            double aa = Math.atan((double) myPoint.x / (double) myPoint.y);
+
+            double ba = Math.atan((double) tpPoint.x / (double) tpPoint.y);
+
+            double l = Math.cos(aa - ba) * Math.sqrt(myPoint.x * myPoint.x + myPoint.y * myPoint.y);
+
+            if(l>800){
+                return;
+            }
+
+            int toY=(int) (Math.cos(ba) * l);
+            if(toY<0){
+                moveHelper.move(0,0);
+            }else {
+
+                moveHelper.move(-(int) (Math.sin(ba) * l), toY);
             }
         }
 
         //返回一个放大缩小的参数
-        public final float getScale() {
-            float f = 1 - (totalX * totalX + totalY * totalY) / 500000f;
+        public final float getScale(float x, float y) {
+            float f = 1 - (x * x + y * y) / 500000f;
             if (f < 0.3f) {
                 return 0.3f;
             }
@@ -383,6 +512,10 @@ public class MzTouch {
 
         public final void moveNoDeal(int x, int y) {
             moveHelper.move(x, y);
+
+            float scale = getScale(x, y);
+            mStableShow.setScaleX(scale);
+            mStableShow.setScaleY(scale);
         }
 
 
@@ -390,8 +523,7 @@ public class MzTouch {
             moveHelper.update();
         }
 
-        protected final void reset() {
-            state = false;
+        private final void reset() {
             moveHelper.reset();
         }
 
@@ -460,11 +592,7 @@ public class MzTouch {
                     super.onSpringEndStateChange(spring);
                 }
             });
-
-            // Set the spring in motion; moving from 0 to 1
             spring.setEndValue(1);
-
-
         }
 
         final void moveNormal() {
@@ -472,5 +600,4 @@ public class MzTouch {
             haveMoved = false;
         }
     }
-
 }

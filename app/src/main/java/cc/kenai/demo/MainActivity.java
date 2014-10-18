@@ -20,9 +20,10 @@ public class MainActivity extends Activity implements
 
 
     boolean ifback;
+
     @Override
     public void onBackPressed() {
-        ifback=true;
+        ifback = true;
         finish();
     }
 
@@ -54,18 +55,18 @@ public class MainActivity extends Activity implements
                 preferences.edit().putString("demo", "0").apply();
             }
         });
-        findViewById(R.id.model2).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                preferences.edit().putString("demo", "1").apply();
-            }
-        });
-        findViewById(R.id.model3).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                preferences.edit().putString("demo", "2").apply();
-            }
-        });
+//        findViewById(R.id.model2).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                preferences.edit().putString("demo", "1").apply();
+//            }
+//        });
+//        findViewById(R.id.model3).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                preferences.edit().putString("demo", "2").apply();
+//            }
+//        });
 
         changeDemo();
     }
@@ -74,8 +75,8 @@ public class MainActivity extends Activity implements
     protected void onDestroy() {
         super.onDestroy();
         preferences.unregisterOnSharedPreferenceChangeListener(this);
-        if(!ifback)
-        stopService(new Intent(this, MainService.class));
+        if (!ifback)
+            stopService(new Intent(this, MainService.class));
     }
 
 
@@ -92,17 +93,19 @@ public class MainActivity extends Activity implements
         switch (Integer.valueOf(preferences.getString("demo", "" + 0))) {
             case 0:
             default:
-                name.setText("模式一：直接拖动");
-                summary.setText("直接拖动圆圈即可位移屏幕\n\n长按圆圈后可移动圆圈位置");
+                name.setText("直接拖动");
+                summary.setText("直接拖动圆圈即可位移屏幕\n\n长按圆圈后可移动圆圈位置" +
+                        "\n\n" +
+                        "由于有一个接口还需要修改，因此切换页面后拖动圆圈可能会无效");
                 return "stable";
-            case 1:
-                name.setText("模式二：单击呼出");
-                summary.setText("点击后从屏幕任意位置可以位移屏幕");
-                return "bottom";
-            case 2:
-                name.setText("模式三：手势操作");
-                summary.setText("通过对圆圈做甩动手势位移屏幕\n\n长按圆圈后可移动圆圈位置");
-                return "free";
+//            case 1:
+//                name.setText("模式二：单击呼出");
+//                summary.setText("点击后从屏幕任意位置可以位移屏幕");
+//                return "bottom";
+//            case 2:
+//                name.setText("模式三：手势操作");
+//                summary.setText("通过对圆圈做甩动手势位移屏幕\n\n长按圆圈后可移动圆圈位置");
+//                return "free";
         }
     }
 }
