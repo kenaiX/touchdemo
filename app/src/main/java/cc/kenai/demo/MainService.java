@@ -4,10 +4,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import demo.MzTouch;
+import floattouch.FloatTouch;
 
 public class MainService extends Service {
-    MzTouch tools;
+    FloatTouch tools;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -17,8 +17,7 @@ public class MainService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        tools = new MzTouch(this);
-        tools.init();
+        tools = new FloatTouch(this);
     }
 
 

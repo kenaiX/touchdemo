@@ -3,13 +3,12 @@
     package="cc.kenai.demo">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.DEVICE_POWER"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.DEVICE_POWER" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:name="cc.kenai.demo.MainApplication"
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/floattouch_round_1"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.DeviceDefault.Light">
         <activity

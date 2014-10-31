@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -10,27 +9,27 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="#32B4E6"
         android:gravity="center"
-        android:orientation="vertical"
-        android:background="#32B4E6">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/name"
-            android:textSize="23sp"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="name" />
+            android:text="name"
+            android:textSize="23sp" />
 
         <TextView
             android:id="@+id/summary"
-            android:textSize="23sp"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="summary" />
+            android:text="summary"
+            android:textSize="23sp" />
 
     </LinearLayout>
 
@@ -41,18 +40,6 @@
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="40dp">
-
-
-        <at.markushi.ui.CircleButton
-            android:id="@+id/model1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/mode1"
-            app:cb_color="#99CC00"
-            app:cb_pressedRingWidth="16dip" />
-
-
 
     </LinearLayout>
 

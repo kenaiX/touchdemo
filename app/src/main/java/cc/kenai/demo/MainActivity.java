@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -43,18 +42,12 @@ public class MainActivity extends Activity implements
 
         getActionBar().hide();
 
-        preferences = getSharedPreferences("demo", 0);
+        preferences = getSharedPreferences("floattouch", 0);
         preferences.registerOnSharedPreferenceChangeListener(this);
 
         name = (TextView) findViewById(R.id.name);
         summary = (TextView) findViewById(R.id.summary);
 
-        findViewById(R.id.model1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                preferences.edit().putString("demo", "0").apply();
-            }
-        });
 //        findViewById(R.id.model2).setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
@@ -82,7 +75,7 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals("demo")) {
+        if (key.equals("floattouch")) {
             changeDemo();
         }
     }
@@ -90,7 +83,7 @@ public class MainActivity extends Activity implements
     @DebugLog
     String changeDemo() {
 
-        switch (Integer.valueOf(preferences.getString("demo", "" + 0))) {
+        switch (Integer.valueOf(preferences.getString("floattouch", "" + 0))) {
             case 0:
             default:
                 name.setText("直接拖动");

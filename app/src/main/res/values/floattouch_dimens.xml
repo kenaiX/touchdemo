@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="floattouch_prepare">16dp</dimen>
+    <dimen name="floattouch_move_y">260dp</dimen>
+    <dimen name="floattouch_move_x">150dp</dimen>
+    <dimen name="floattouch_show">40dp</dimen>
+</resources>
